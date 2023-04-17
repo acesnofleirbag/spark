@@ -1,4 +1,5 @@
 bits 16
+;; WARN: For elf64 linkage format (nasm -f elf64) the org instruction is not supported
 org 0x7c00
 
 start: jmp boot

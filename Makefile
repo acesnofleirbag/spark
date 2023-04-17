@@ -2,12 +2,21 @@ BOOTLOADER_SRC := $(wildcard src/*.asm)
 BOOTLOADER_OBJ := $(patsubst %.asm, %.o, $(BOOTLOADER_SRC))
 OUTDIR = build
 VERSION = 0_0_0
+DEBUG = 0
 
 .PHONY: all
 all: clean spark kernel bootdisk
 
 %.o: %.asm
-	nasm -f bin $< -o $(subst src/, build/, $@)
+ifeq ($(DEBUG),1)
+	nasm -f elf64 $< -F dwarf -g -o $(subst src/, $(OUTDIR)/, $@)
+	# TODO: org 0x7c00 instruction not works for elf64 format `-Ttext=0x7c00` is enough ???
+	ld -Ttext=0x7c00 -m elf_x86_64 -T src/main.lds $(subst src/, $(OUTDIR)/, $@) -o $(subst src/, $(OUTDIR)/, $@.elf)
+	# FIXME(error): objcopy: build/spark.o: invalid bfd target
+	# objcopy -O build/spark $(OUTDIR)/spark.o.elf $(OUTDIR)/spark.o
+else
+	nasm -f bin $< -o $(subst src/, $(OUTDIR)/, $@)
+endif
 
 .PHONY: spark
 spark:
